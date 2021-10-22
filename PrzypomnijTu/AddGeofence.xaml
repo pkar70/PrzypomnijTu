@@ -1,0 +1,63 @@
+﻿<Page
+    x:Class="PrzypomnijTu.AddGeofence"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PrzypomnijTu"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
+
+    <Grid Margin="5,5,5,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Name="uiTitle" Text="Dodawanie Geofence" HorizontalAlignment="Center" FontSize="20" Margin="0,5,0,10" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="130" />
+                <ColumnDefinition Width="100" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Nazwa: " Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+            <TextBox Name="uiNazwa" Grid.Row="0" Grid.Column="1" Width="200" IsSpellCheckEnabled="False" Grid.ColumnSpan="2" HorizontalAlignment="Left" />
+            <TextBlock Text="Latitude: " Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
+            <TextBox Name="uiLat" Grid.Row="1" Grid.Column="1" Width="90" InputScope="Number" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"  HorizontalAlignment="Left"  />
+            <TextBlock Text="Longitude: " Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" />
+            <TextBox Name="uiLon" Grid.Row="2" Grid.Column="1" Width="90" InputScope="Number" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"  HorizontalAlignment="Left" />
+            <TextBlock Text="Radius: " Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" />
+            <!--<TextBox Name="uiRadius" Grid.Row="3" Grid.Column="1" Width="80" Text="75" InputScope="Digits" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" />-->
+            <muxc:NumberBox Name="uiRadius" Grid.Row="3" Grid.Column="1" Width="120" Text="75" AcceptsExpression="True" SpinButtonPlacementMode="Compact" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Minimum="10"/>
+            <TextBlock Text=" (metrów)" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" />
+
+            <TextBlock Text="Zwłoka: " Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" />
+            <!--<TextBox Name="uiZwloka" Grid.Row="4" Grid.Column="1" Width="80" Text="10" InputScope="Digits" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" />-->
+            <muxc:NumberBox Name="uiZwloka" Grid.Row="4" Grid.Column="1" Width="120" Text="10" AcceptsExpression="True" SpinButtonPlacementMode="Hidden" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Minimum="10" Maximum="3600"/>
+            <TextBlock Text=" (sekund)" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" />
+
+            <Button Content="GPS" Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" Click="uiGetGPS_Click" VerticalAlignment="Center" HorizontalAlignment="Center" />
+        </Grid>
+
+        <Maps:MapControl Name="uiMapka" Grid.Row="2" 
+                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                         Margin="5,5,5,5" Loaded="uiMapka_Loaded" MapHolding="uiMapka_Holding" MapDoubleTapped="uiMapka_DTapped"/>
+
+
+        <Button Grid.Row="3" HorizontalAlignment="Center" Margin="5,10,5,5" Click="uiAdd_Click">
+            <SymbolIcon Name="uiSaveSymbol" Symbol="Add" />
+        </Button>
+    </Grid>
+</Page>

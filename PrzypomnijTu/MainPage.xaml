@@ -1,0 +1,69 @@
+﻿<Page
+    x:Class="PrzypomnijTu.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PrzypomnijTu"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded" >
+
+    <Grid Name="uiGrid" Margin="5,5,5,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition  />
+        </Grid.RowDefinitions>
+        <!--<ProgressRing x:Name="uiProcesuje" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" /> -->
+
+
+        <TextBlock FontSize="24" HorizontalAlignment="Center" Margin="5,5,5,10" Text="Przypomnij TU" />
+
+        <ListView Grid.Row="2" x:Name="uiPointsList" Margin="5,10,10,10" HorizontalContentAlignment="Stretch"  >
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment"  Value="Stretch"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid HorizontalAlignment="Stretch" Margin="1,5,1,1" BorderBrush="Blue" BorderThickness="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <CheckBox Grid.Column="0" Grid.RowSpan="2" IsChecked="{Binding bTutaj, Mode=TwoWay }" Checked="uiHere_Checked" Unchecked="uiHere_Checked" HorizontalAlignment="Center" MinWidth="30"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding sName, Mode=OneWay }" FontSize="20" Margin="5,0,5,0" DoubleTapped="uiHere_DTapped"/>
+                        <!--<TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding sLastVisitTime, Mode=OneWay }" /> -->
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding dLat, Mode=OneWay }" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding dLon, Mode=OneWay }" />
+                        <Grid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Edit message" Click="uiItemMsg_Click" />
+                                <MenuFlyoutItem Text="Edit" Click="uiItemEdit_Click" />
+                            </MenuFlyout>
+                        </Grid.ContextFlyout>
+                    </Grid>
+
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+    <Page.BottomAppBar>
+        <CommandBar ClosedDisplayMode="Minimal" >
+            <AppBarButton Icon="Add" Label="Add" Click="uiAdd_Click" />
+            <AppBarButton Icon="Refresh" Label="Refesh" Click="uiRefresh_Click"/>
+            <!--<AppBarButton Icon="Clear" Label="Clear" Click="uiClear_Click" />-->
+            <AppBarButton Icon="Setting" Label="Settings" Click="uiSettings_Click" />
+        </CommandBar>
+    </Page.BottomAppBar>
+
+</Page>
+    
