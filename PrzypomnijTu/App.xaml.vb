@@ -103,13 +103,18 @@
                 Select Case sArgs.Substring(0, 4)
                     Case "OPEN"
                         If rootFrame.Content Is Nothing Then
-                            rootFrame.Navigate(GetType(MainPage), sArgs.Substring(4))
+                            rootFrame.Navigate(GetType(MainPage), sArgs)
                         Else
                             CrashMessageAdd("OnActivated - OPEN not null", "")
                         End If
                 End Select
             End If
             rootFrame.Navigate(GetType(MainPage))
+        End If
+
+        If args.Kind = ActivationKind.Protocol Then
+            Dim argsProt As ProtocolActivatedEventArgs = args
+            rootFrame.Navigate(GetType(MainPage), argsProt.Uri)
         End If
 
         Window.Current.Activate()
@@ -135,6 +140,33 @@
     Private Shared Function AppServiceLocalCommand(sCommand As String)
         Return ""
     End Function
+
+    Public Shared Async Function GetCurrentPoint(iTimeoutSecs As Integer) As Task(Of Windows.Devices.Geolocation.BasicGeoposition)
+        DumpCurrMethod()
+
+        Dim rVal As Windows.Devices.Geolocation.GeolocationAccessStatus = Await Windows.Devices.Geolocation.Geolocator.RequestAccessAsync()
+        If rVal <> Windows.Devices.Geolocation.GeolocationAccessStatus.Allowed Then
+            Await DialogBoxAsync("resErrorNoGPSAllowed")
+            Return GetDomekGeopos(1)
+        End If
+
+        Dim oDevGPS As Windows.Devices.Geolocation.Geolocator = New Windows.Devices.Geolocation.Geolocator()
+
+        oDevGPS.DesiredAccuracyInMeters = GetSettingsInt("gpsPrec", 75) ' dla 4 km/h; 100 m = 90 sec, 75 m = 67 sec
+        Dim oCacheTime As TimeSpan = New TimeSpan(0, 1, 0)  ' minuta ≈ 80 m (ale nie autobusem! wtedy 400 m)
+        Dim oTimeout As TimeSpan = New TimeSpan(0, 0, iTimeoutSecs)
+
+        Try
+            Dim oPos As Windows.Devices.Geolocation.Geoposition = Await oDevGPS.GetGeopositionAsync(oCacheTime, oTimeout)
+            Return oPos.Coordinate.Point.Position
+        Catch ex As Exception   ' zapewne timeout
+        End Try
+
+        Await DialogBoxAsync("resErrorGettingPos")
+        Return GetDomekGeopos(1)
+
+    End Function
+
 
     'Protected Overrides Sub OnBackgroundActivated(args As BackgroundActivatedEventArgs)
     '    ' tile update / warnings

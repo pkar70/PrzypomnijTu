@@ -19,7 +19,7 @@
         </Grid.RowDefinitions>
         <TextBlock Name="uiTitle" Text="Dodawanie Geofence" HorizontalAlignment="Center" FontSize="20" Margin="0,5,0,10" />
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" x:Name="uiGridFields">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="130" />
@@ -32,7 +32,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock Text="Nazwa: " Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+            <TextBlock Text="Nazwa: " Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Name="uiNazwaHdr"/>
             <TextBox Name="uiNazwa" Grid.Row="0" Grid.Column="1" Width="200" IsSpellCheckEnabled="False" Grid.ColumnSpan="2" HorizontalAlignment="Left" />
             <TextBlock Text="Latitude: " Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
             <TextBox Name="uiLat" Grid.Row="1" Grid.Column="1" Width="90" InputScope="Number" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"  HorizontalAlignment="Left"  />
@@ -53,7 +53,7 @@
 
         <Maps:MapControl Name="uiMapka" Grid.Row="2" 
                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
-                         Margin="5,5,5,5" Loaded="uiMapka_Loaded" MapHolding="uiMapka_Holding" MapDoubleTapped="uiMapka_DTapped"/>
+                         Margin="5,5,5,5" Loaded="uiMapka_Loaded" MapHolding="uiMapka_Holding" MapDoubleTapped="uiMapka_DTapped" FocusEngaged="uiMapka_FocusEngaged" />
 
 
         <Button Grid.Row="3" HorizontalAlignment="Center" Margin="5,10,5,5" Click="uiAdd_Click">

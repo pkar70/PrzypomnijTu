@@ -1,0 +1,53 @@
+﻿<Page
+    x:Class="PrzypomnijTu.DebugRozne"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PrzypomnijTu"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Debug rzeczy, осторожно" HorizontalAlignment="Center" />
+
+        <Button Content="View system list" Click="uiViewSysList_Click" Grid.Row="1" HorizontalAlignment="Left" Margin="5,10,0,0" />
+        <Button Content="View app list" Click="uiViewAppList_Click" Grid.Row="1" HorizontalAlignment="Right" Margin="5,10,5,0" />
+
+        <ListView Grid.Row="2" x:Name="uiPointsList" Margin="5,10,10,10" HorizontalContentAlignment="Stretch"  >
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment"  Value="Stretch"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid HorizontalAlignment="Stretch" Margin="1,5,1,1" BorderBrush="Blue" BorderThickness="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="{Binding sName, Mode=OneWay }" />
+                        <TextBlock Grid.Column="2" Text="{Binding sTxt, Mode=OneWay }" />
+                    </Grid>
+
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+
+        <Button Content="Del system list" Click="uiDelSysList_Click" Grid.Row="3" HorizontalAlignment="Left" Margin="5,0,0,0" />
+        <Button Content="Del app list" Click="uiDelAppList_Click" Grid.Row="3" HorizontalAlignment="Right" Margin="5,0,5,0" />
+        
+        
+
+    </Grid>
+</Page>

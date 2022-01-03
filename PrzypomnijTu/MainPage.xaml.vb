@@ -1,4 +1,55 @@
-﻿'
+﻿
+' posiedzenie Wojtek+Magda+ja
+' * termin ważności przypomnienia, i larum że nie odklikane/potwierdzone
+' * szukanie wedle POI w OSM? Bing? Gmaps?
+' * edycja POI w OSM?
+' * punkt z mapy - to Biedronka, jest wiele innych, dowolna niekoniecznie ta
+' * link z miejsca dokądś (np. z POI do ich strony)
+' * auto wyłączanie punktów odległych ≥ ode mnie
+' * wyszukiwanie na mapie (np. Warszawa)
+' * potwierdzenie wykonania - uwaga! jak wysłane do kilku osób
+' * do zrobienia nie jedna rzezc, a lista (np. zakupów), kilka osób dostało, każdy kupi inny kawałek
+' * - a na razie blokada wysłania do więcej niż jednego?
+' * wysyłanie SMS po dodaniu zadania dla miejsca
+' * przychodzi SMS - akceptacja/odrzucenie, SMSem odpowiedź
+' * dotarcie do statusu SMS, sent/delivered/read
+' * MAUI status sms (jest iOS, Android, UWP), geofence (nie ma), i mapy
+' * czas od pierwszej instalacji?
+' * import/export danych (miejsc) z opisami, zwłaszcza jak większymi listami (np. co do zwiedzenia w Rzymie)
+' * limit geofences dla Windows, Android, iOS
+
+' scenariusz: jak tu będę, to warto zrobić zdjęcie, z tego samego miejsca w 4 pory roku
+' scenariusz: kupić w OBI jak tam będę (lista)
+' scenariusz: będę u rodziców, pożyczyć wiertarkę
+' scenariusz: będziesz w Rzymie w okolicy, to wpadnij tu a tu bo dobrze dają jeść
+' scenariusz: lista punktów do zobaczenia z opisami
+
+' link do app UWP Shopping List?
+
+' może MAPSUI, ale 1.4.8, bo nowsze nie pójdą na telefon
+
+' 2022.01.03
+' * max mapy jak jest aktywna, z wygaszaniem niepotrzebnych pól (zostaje tylko Name)
+' * Main:Setup:Debug jako podstrona, (view/del) (sys/app) list
+' * BUG MainPage:Check/uncheck - była blokada na mLadowanie, ale tenże znacznik nie był wyłączany :)
+
+' 2022.01.02
+' * przerzuciłem trochę z MainPage.vb do typki.vb (czasem dodając shared)
+' * poprawka w obsłudze zaznaczania checkbox na liście
+' * MainPage: z protocolActivation, jeśli nowe miejsce, to dodaje do listy i do systemu
+
+' 2022.01.01
+' * AddPoint (bug) zanim powie że już jest nazwa, to sprawdza czy w ogóle mamy taki punkt (brakowało jednego IF)
+' * Settings: TextBlock z wartością, oraz rozrysowana doba
+' * Settings: (bug) można nie tylko dane zapisać ale i wraca (po zapisaniu) do MainPage
+' * MainPage: contextMenu "edit" -> "edit geofence" (zeby nie było wątpliwośći)
+' * MainPage: contextMenu delete punktu (z listy i systemu)
+' * Settings, guzik Debug - podaje aktualne odległości od wszystkich fences
+' * MainPage: contextMenu "SMS" - compose SMS z prymitywnym tekstem
+' * App: protocol activation (przyptu://?s=&d= , jak szerokość i długość; bez ? wylatuje błąd w Uri na &)
+
+
+'
 ' zmiany
 ' 2021.03 pierwsza wersja
 ' 2021.08:
@@ -6,6 +57,8 @@
 '   * ustawianie DwellTime ("zwłoka")
 '   * EXIT event tylko w wersji DEBUG
 '   * WinUI 2.6, i NumberBox w AddGeofence (dla Radius i DwellTime)
+
+
 
 
 Public NotInheritable Class MainPage
@@ -30,7 +83,7 @@ Public NotInheritable Class MainPage
 
             uiPointsList.ItemsSource = App.gMiejsca.GetList
 
-            mLadowanie = True
+            mLadowanie = False
 
         Catch ex As Exception
             CrashMessageAdd("CATCH uiRefresh_Click", ex)
@@ -51,50 +104,14 @@ Public NotInheritable Class MainPage
 
     End Sub
 
-    Private Function CreateGeofence(oMiejsce As JednoMiejsce) As Windows.Devices.Geolocation.Geofencing.Geofence
+    'Private Sub DeleteAllOgrodzenia()
+    '    Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
+    '        Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
 
-        Dim oPoint As Windows.Devices.Geolocation.BasicGeoposition = New Windows.Devices.Geolocation.BasicGeoposition
-        oPoint.Latitude = oMiejsce.dLat
-        oPoint.Longitude = oMiejsce.dLon
-
-        Dim oGeocircle As Windows.Devices.Geolocation.Geocircle
-        oGeocircle = New Windows.Devices.Geolocation.Geocircle(oPoint, 200) ' w metrach
-
-        Dim oGeofence As Windows.Devices.Geolocation.Geofencing.Geofence
-        ' When this constructor is used, the 
-        ' MonitoredStates will default To monitor For both the Entered And Exited states, 
-        ' SingleUse will default To False, 
-        ' the DwellTime will default To 10 seconds, the 
-        ' StartTime will default To 0 meaning start immediately, and the 
-        ' Duration will default to 0, meaning forever.
-
-        ' bardziej rozbudowany:
-        ' .., states, singleUse
-        ' bardziej rozbudowany:
-        ' ....., dwellTime (secs)
-
-        Dim oEventy As Windows.Devices.Geolocation.Geofencing.MonitoredGeofenceStates = Windows.Devices.Geolocation.Geofencing.MonitoredGeofenceStates.Entered
-#If DEBUG Then
-        oEventy = oEventy Or Windows.Devices.Geolocation.Geofencing.MonitoredGeofenceStates.Exited
-#End If
-
-        oGeofence = New Windows.Devices.Geolocation.Geofencing.Geofence(ListaMiejsc.sIdPrefix & oMiejsce.sName, oGeocircle, oEventy, False, TimeSpan.FromSeconds(oMiejsce.iZwloka))
-
-        Return oGeofence
-
-        ' bardziej rozbudowany:
-        ' ....., startTime, duration
-
-    End Function
-
-    Private Sub DeleteAllOgrodzenia()
-        Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
-            Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
-
-        If oGeoMon.Geofences IsNot Nothing Then
-            oGeoMon.Geofences.Clear()
-        End If
-    End Sub
+    '    If oGeoMon.Geofences IsNot Nothing Then
+    '        oGeoMon.Geofences.Clear()
+    '    End If
+    'End Sub
 
 
     Private Sub RegisterTrigger()
@@ -193,14 +210,15 @@ Public NotInheritable Class MainPage
         SetSettingsString("resOpen", "Open")    ' resource LANG; tekst na guziku OPEN na Toast
 
         RegisterTrigger()
-        uiRefresh_Click(Nothing, Nothing)
+        uiRefresh_Click(Nothing, Nothing)   ' tu jest wczytanie listy
 
         If Not String.IsNullOrEmpty(msNavigatedParam) Then
-            ' *TODO* pokaz tekst 
-            DialogBox("tekst dla eventu " & msNavigatedParam)
+            If msNavigatedParam.StartsWith("OPEN") Then
+                ShowPlaceMessage(App.gMiejsca.GetMiejsce(msNavigatedParam.Substring(4)))
+            ElseIf msNavigatedParam.ToLower.StartsWith("przyptu") Then
+                Await ProtocolActivatedEventArgs(msNavigatedParam)
+            End If
         End If
-
-        If msNavigatedParam <> "" Then ShowPlaceMessage(App.gMiejsca.GetMiejsce(msNavigatedParam))
 
     End Sub
 
@@ -222,7 +240,6 @@ Public NotInheritable Class MainPage
 
     End Function
 
-
     Private Async Sub uiAdd_Click(sender As Object, e As RoutedEventArgs)
         If App.gMiejsca.Count > 2 AndAlso Not Await IsFullVersion() Then
             DialogBox("Więcej tylko w wersji płatnej")
@@ -231,103 +248,28 @@ Public NotInheritable Class MainPage
         Me.Frame.Navigate(GetType(AddGeofence))
     End Sub
 
-    Public Function TryAddGeofence(oItem As JednoMiejsce) As Boolean
+    Private Function MiejsceFromSender(sender As Object) As JednoMiejsce
+        Dim oCB As FrameworkElement = TryCast(sender, FrameworkElement)
+        If oCB Is Nothing Then Return Nothing
 
-        Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
-            Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
-
-        If oGeoMon.Geofences IsNot Nothing Then
-            For Each oFence As Windows.Devices.Geolocation.Geofencing.Geofence In oGeoMon.Geofences
-                'dwa zabezpieczenia, którego mogłoby nie być, ale na wszelki wypadek... (nazwa, i kształt)
-                If Not oFence.Id.ToUpper.StartsWith(ListaMiejsc.sIdPrefix) Then Continue For
-                Dim oGeoCircle As Windows.Devices.Geolocation.Geocircle = TryCast(oFence.Geoshape, Windows.Devices.Geolocation.Geocircle)
-                If oGeoCircle Is Nothing Then Continue For
-
-                ' juz mamy takie
-                If oGeoCircle.Center.DistanceTo(oItem.dLat, oItem.dLon) < 20 Then Return False
-            Next
-        End If
-
-        Dim oNew As Windows.Devices.Geolocation.Geofencing.Geofence = CreateGeofence(oItem)
-        oGeoMon.Geofences.Add(oNew)
-        Return True
-    End Function
-
-    Private Async Function DodajUsun(bUsun As Boolean, oItem As JednoMiejsce) As Task
-        If oItem Is Nothing Then Return
-
-        ' Zakladam SYNC App.gMiejsca oraz GeofenceMonitor (bo przy wczytywaniu sie to zrobilo)
-
-        Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
-            Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
-
-        If oGeoMon.Geofences Is Nothing Then Return
-
-
-        If Not bUsun Then
-            ' włącz monitorowanie
-            TryAddGeofence(oItem)   ' z testem czy juz istnieje - bo MainPage.Loaded robi OnChecked!
-        Else
-            ' wyłącz
-            For Each oFence As Windows.Devices.Geolocation.Geofencing.Geofence In oGeoMon.Geofences
-                'dwa zabezpieczenia, którego mogłoby nie być, ale na wszelki wypadek... (nazwa, i kształt)
-                If Not oFence.Id.ToUpper.StartsWith(ListaMiejsc.sIdPrefix) Then Continue For
-                Dim oGeoCircle As Windows.Devices.Geolocation.Geocircle = TryCast(oFence.Geoshape, Windows.Devices.Geolocation.Geocircle)
-                If oGeoCircle Is Nothing Then Continue For
-
-                If oItem.dLat = oGeoCircle.Center.Latitude AndAlso
-                                oItem.dLon = oGeoCircle.Center.Longitude Then
-                    oGeoMon.Geofences.Remove(oFence)
-                    Exit For
-                End If
-            Next
-        End If
-
+        Return TryCast(oCB.DataContext, JednoMiejsce)
 
     End Function
 
     Private Async Sub uiHere_Checked(sender As Object, e As RoutedEventArgs)
+        DumpCurrMethod()
         If mLadowanie Then Return   ' jest wlasnie robione ItemsSource , więc to do zignorowania
         Dim oCB As CheckBox = TryCast(sender, CheckBox)
         If oCB Is Nothing Then Return
 
-        Dim oItem As JednoMiejsce = TryCast(oCB.DataContext, JednoMiejsce)
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
         If oItem Is Nothing Then Return
 
-        Await DodajUsun(oCB.IsChecked, oItem)
-        ' Zakladam SYNC App.gMiejsca oraz GeofenceMonitor (bo przy wczytywaniu sie to zrobilo)
-
-        'Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
-        '    Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
-
-        'If oGeoMon.Geofences Is Nothing Then Return
-
-
-        'If oCB.IsChecked Then
-        '    ' włącz monitorowanie
-        '    TryAddGeofence(oItem)   ' z testem czy juz istnieje - bo MainPage.Loaded robi OnChecked!
-        'Else
-        '    ' wyłącz
-        '    For Each oFence As Windows.Devices.Geolocation.Geofencing.Geofence In oGeoMon.Geofences
-        '        'dwa zabezpieczenia, którego mogłoby nie być, ale na wszelki wypadek... (nazwa, i kształt)
-        '        If Not oFence.Id.ToUpper.StartsWith(ListaMiejsc.sIdPrefix) Then Continue For
-        '        Dim oGeoCircle As Windows.Devices.Geolocation.Geocircle = TryCast(oFence.Geoshape, Windows.Devices.Geolocation.Geocircle)
-        '        If oGeoCircle Is Nothing Then Continue For
-
-        '        If oItem.dLat = oGeoCircle.Center.Latitude AndAlso
-        '                        oItem.dLon = oGeoCircle.Center.Longitude Then
-        '            oGeoMon.Geofences.Remove(oFence)
-        '            Exit For
-        '        End If
-        '    Next
-        'End If
-
-
+        App.gMiejsca.DodajUsunSystem(Not oCB.IsChecked, oItem)
 
         ' zmiana w App.gMiejsca jest zrobiona przez XAML
         App.gMiejsca.MakeDirty()
         Await App.gMiejsca.SaveAsync(True)
-
 
     End Sub
 
@@ -343,7 +285,10 @@ Public NotInheritable Class MainPage
 
     Private Async Sub ShowPlaceMessage(oItem As JednoMiejsce)
         ' pokazanie/edycja tekstu dla danego miejsca
-        If oItem Is Nothing Then Return
+        If oItem Is Nothing Then
+            DialogBox("nie moge znalezc miejsca do którego trafiłeś")
+            Return
+        End If
 
         If oItem.sRemindText Is Nothing Then oItem.sRemindText = ""
 
@@ -373,10 +318,7 @@ Public NotInheritable Class MainPage
     End Sub
 
     Private Sub uiItemMsg_Click(sender As Object, e As RoutedEventArgs)
-        Dim oTB As MenuFlyoutItem = TryCast(sender, MenuFlyoutItem)
-        If oTB Is Nothing Then Return
-
-        Dim oItem As JednoMiejsce = TryCast(oTB.DataContext, JednoMiejsce)
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
         If oItem Is Nothing Then Return
 
         ShowPlaceMessage(oItem)
@@ -388,10 +330,7 @@ Public NotInheritable Class MainPage
     End Sub
 
     Private Async Sub uiItemRadius_Click(sender As Object, e As RoutedEventArgs)
-        Dim oTB As MenuFlyoutItem = TryCast(sender, MenuFlyoutItem)
-        If oTB Is Nothing Then Return
-
-        Dim oItem As JednoMiejsce = TryCast(oTB.DataContext, JednoMiejsce)
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
         If oItem Is Nothing Then Return
 
         Dim sRadius As String = Await DialogBoxInputDirectAsync("Promień:", oItem.dRadius)
@@ -403,31 +342,25 @@ Public NotInheritable Class MainPage
         End If
 
         ' usun ze starym radius
-        If oItem.bTutaj Then Await DodajUsun(True, oItem)
+        If oItem.bTutaj Then App.gMiejsca.DodajUsunSystem(True, oItem)
 
         ' a teraz dodaj z nowym
         oItem.dRadius = dRadius
-        If oItem.bTutaj Then Await DodajUsun(False, oItem)
+        If oItem.bTutaj Then App.gMiejsca.DodajUsunSystem(False, oItem)
 
         Await App.gMiejsca.SaveAsync(True)
 
     End Sub
 
     Private Sub uiItemEdit_Click(sender As Object, e As RoutedEventArgs)
-        Dim oTB As MenuFlyoutItem = TryCast(sender, MenuFlyoutItem)
-        If oTB Is Nothing Then Return
-
-        Dim oItem As JednoMiejsce = TryCast(oTB.DataContext, JednoMiejsce)
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
         If oItem Is Nothing Then Return
 
         Me.Frame.Navigate(GetType(AddGeofence), oItem.sName)
     End Sub
 
     Private Async Sub uiItemRename_Click(sender As Object, e As RoutedEventArgs)
-        Dim oTB As MenuFlyoutItem = TryCast(sender, MenuFlyoutItem)
-        If oTB Is Nothing Then Return
-
-        Dim oItem As JednoMiejsce = TryCast(oTB.DataContext, JednoMiejsce)
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
         If oItem Is Nothing Then Return
 
         Dim sNewName As String = Await DialogBoxInputDirectAsync("Nowa nazwa:", oItem.sName)
@@ -442,15 +375,94 @@ Public NotInheritable Class MainPage
         Next
 
         ' usun ze starym ID
-        If oItem.bTutaj Then Await DodajUsun(True, oItem)
+        If oItem.bTutaj Then App.gMiejsca.DodajUsunSystem(True, oItem)
 
         ' a teraz dodaj z nowym ID
         oItem.sName = sNewName
-        If oItem.bTutaj Then Await DodajUsun(False, oItem)
+        If oItem.bTutaj Then App.gMiejsca.DodajUsunSystem(False, oItem)
 
         Await App.gMiejsca.SaveAsync(True)
 
     End Sub
+
+    Private Async Sub uiDelete_Click(sender As Object, e As RoutedEventArgs)
+
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
+        If oItem Is Nothing Then Return
+
+        ' dopiero po sprawdzeniu że rzeczywiście jest co usuwać
+        If Not Await DialogBoxYNAsync("Na pewno usunąć i z app i z systemu?") Then Return
+
+        App.gMiejsca.RemoveFromMonitor(oItem)
+        App.gMiejsca.Remove(oItem)
+
+        uiRefresh_Click(Nothing, Nothing)
+
+    End Sub
+
+    Private Async Sub uiSendSMS_Click(sender As Object, e As RoutedEventArgs)
+
+        'If Not Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.ApplicationModel.Chat") Then
+        '    DialogBox("Sorry, tu nie ma SMSów")
+        '    Return
+        'End If
+
+        Dim oItem As JednoMiejsce = MiejsceFromSender(sender)
+        If oItem Is Nothing Then Return
+
+
+        Dim sTxt As String = "Zadzwon jak bedziesz tu przyptu://?s=" & oItem.dLat.ToString("#0.0000") & "&d=" & oItem.dLon.ToString("#0.0000") & "&r=" & oItem.dRadius.ToString("###0.0000")
+        Dim oSMS As New Windows.ApplicationModel.Chat.ChatMessage
+
+        oSMS.Body = sTxt
+
+        ' Windows.ApplicationModel.Chat.ChatMessageManager.ShowSmsSettings()
+        Await Windows.ApplicationModel.Chat.ChatMessageManager.ShowComposeSmsMessageAsync(oSMS)
+    End Sub
+
+    Private Async Function ProtocolActivatedEventArgs(msNavigatedParam As String) As Task
+
+        Dim oUri As Uri = New Uri(msNavigatedParam)
+        If oUri.Scheme.ToLower <> "przyptu" Then
+            DialogBox("protocolActivation: scheme error  " & msNavigatedParam)
+        End If
+
+
+        Dim dLat As Double = 100
+        Dim dLon As Double = -1
+        Dim dRad As Double = 0
+
+        ' System.Web.HttpUtility.ParseQueryString 
+        Dim aParams As String() = oUri.Query.Split("&")
+        For Each sParam As String In aParams
+            If sParam.StartsWith("s=") Then Double.TryParse(sParam.Substring(2), dLat)
+            If sParam.StartsWith("d=") Then Double.TryParse(sParam.Substring(2), dLon)
+            If sParam.StartsWith("r=") Then Double.TryParse(sParam.Substring(2), dRad)
+        Next
+
+        If dLat = 100 OrElse dLon < 0 OrElse dRad = 0 Then
+            Await DialogBoxAsync("protocolActivation: paramErrors  " & msNavigatedParam)
+        End If
+
+        Dim oPoint As JednoMiejsce = App.gMiejsca.GetMiejsce(dLat, dLon)
+        If oPoint IsNot Nothing Then
+            Await DialogBoxAsync("protocolActivation: mam miejsce = " & oPoint.sName)
+        Else
+            If Await DialogBoxYNAsync("Dodać miejsce z linku?") Then
+                Dim oNew As JednoMiejsce = New JednoMiejsce
+                oNew.bTutaj = True
+                oNew.dLat = dLat
+                oNew.dLon = dLon
+                oNew.dRadius = dRad
+                oNew.sName = "from LINK"
+                oNew.iZwloka = 30
+                App.gMiejsca.Add(oNew)
+                App.gMiejsca.DodajUsunSystem(False, oNew)
+                Await App.gMiejsca.SaveAsync(True)
+            End If
+        End If
+
+    End Function
 
 End Class
 

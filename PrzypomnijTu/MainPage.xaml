@@ -47,7 +47,11 @@
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem Text="Edit message" Click="uiItemMsg_Click" />
-                                <MenuFlyoutItem Text="Edit" Click="uiItemEdit_Click" />
+                                <MenuFlyoutItem Text="Edit geofence" Click="uiItemEdit_Click" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem Text="SMS zadzwoń" Click="uiSendSMS_Click" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem Text="Delete" Click="uiDelete_Click" />
                             </MenuFlyout>
                         </Grid.ContextFlyout>
                     </Grid>

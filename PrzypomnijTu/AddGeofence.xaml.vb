@@ -6,14 +6,15 @@ Public NotInheritable Class AddGeofence
     Private mPlace As JednoMiejsce = Nothing
 
     Protected Overrides Sub onNavigatedTo(e As NavigationEventArgs)
+        DumpCurrMethod()
         If e.Parameter Is Nothing Then Return
         mEditId = e.Parameter.ToString
     End Sub
 
-
     Private Async Sub uiGetGPS_Click(sender As Object, e As RoutedEventArgs)
+        DumpCurrMethod()
         ProgRingShow(True)
-        Dim oPos As Windows.Devices.Geolocation.BasicGeoposition = Await GetCurrentPoint(10)  ' lub default
+        Dim oPos As Windows.Devices.Geolocation.BasicGeoposition = Await App.GetCurrentPoint(10)  ' lub default
         ProgRingShow(False)
 
         uiLat.Text = oPos.Latitude
@@ -22,6 +23,7 @@ Public NotInheritable Class AddGeofence
     End Sub
 
     Private Async Sub uiAdd_Click(sender As Object, e As RoutedEventArgs)
+        DumpCurrMethod()
 
         ' testy nazwy
         If uiNazwa.Text.Length < 2 Then
@@ -33,37 +35,44 @@ Public NotInheritable Class AddGeofence
             Return
         End If
 
-        Dim oPrev As JednoMiejsce = App.gMiejsca.GetMiejsce(uiNazwa.Text)
-        If mEditId = "" Then
-            DialogBox("taka nazwa już istnieje")
-            Return
-        End If
-        If mEditId <> uiNazwa.Text Then
-            DialogBox("zmieniłeś nazwę na taką co już istnieje")
-            Return
-        End If
+        If uiNazwa.Text = gInitKey Then
+            InitMojeMiejsca()
+        Else
 
-        Dim dLat As Double = SprobujParseLat(uiLat.Text)
-        Dim dLon As Double = SprobujParseLon(uiLon.Text)
-        Dim oItem As JednoMiejsce = App.gMiejsca.GetMiejsce(dLat, dLon)
-        If oItem IsNot Nothing AndAlso oItem.sName <> mEditId Then
-            DialogBox("To miejsce jest już zdefiniowaneW tym miejscu już istnieje jako: " & vbCrLf & oItem.sName)
-            Return
-        End If
+            Dim oPrev As JednoMiejsce = App.gMiejsca.GetMiejsce(uiNazwa.Text)
+            If oPrev IsNot Nothing Then
+                If mEditId = "" Then
+                    DialogBox("taka nazwa już istnieje")
+                    Return
+                End If
+                If mEditId <> uiNazwa.Text Then
+                    DialogBox("zmieniłeś nazwę na taką co już istnieje")
+                    Return
+                End If
+            End If
 
-        Dim oNew As JednoMiejsce = New JednoMiejsce
-        oNew.sName = uiNazwa.Text
-        oNew.dLat = dLat
-        oNew.dLon = dLon
-        oNew.dRadius = SprobujParseFi(uiRadius.Text)    ' choc to jest juz w samym NumberBox
-        oNew.iZwloka = SprobujParseZwloka(uiZwloka.Text) ' choc to jest juz w samym NumberBox
-        App.gMiejsca.Add(oNew)
+            Dim dLat As Double = SprobujParseLat(uiLat.Text)
+            Dim dLon As Double = SprobujParseLon(uiLon.Text)
+            Dim oItem As JednoMiejsce = App.gMiejsca.GetMiejsce(dLat, dLon)
+            If oItem IsNot Nothing AndAlso oItem.sName <> mEditId Then
+                DialogBox("To miejsce jest już zdefiniowaneW tym miejscu już istnieje jako: " & vbCrLf & oItem.sName)
+                Return
+            End If
 
-        If mEditId <> "" AndAlso mEditId <> uiNazwa.Text Then
-            App.gMiejsca.Remove(mPlace)
-            If mPlace.bTutaj Then
-                ' i zeby nie wrocilo samo jako ze jest zdefiniowane w systemie również
-                App.gMiejsca.RemoveFromMonitor(mPlace)
+            Dim oNew As JednoMiejsce = New JednoMiejsce
+            oNew.sName = uiNazwa.Text
+            oNew.dLat = dLat
+            oNew.dLon = dLon
+            oNew.dRadius = SprobujParseFi(uiRadius.Text)    ' choc to jest juz w samym NumberBox
+            oNew.iZwloka = SprobujParseZwloka(uiZwloka.Text) ' choc to jest juz w samym NumberBox
+            App.gMiejsca.Add(oNew)
+
+            If mEditId <> "" AndAlso mEditId <> uiNazwa.Text Then
+                App.gMiejsca.Remove(mPlace)
+                If mPlace.bTutaj Then
+                    ' i zeby nie wrocilo samo jako ze jest zdefiniowane w systemie również
+                    App.gMiejsca.RemoveFromMonitor(mPlace)
+                End If
             End If
         End If
 
@@ -72,6 +81,7 @@ Public NotInheritable Class AddGeofence
     End Sub
 
     Private Async Sub Page_Loaded(sender As Object, e As RoutedEventArgs)
+        DumpCurrMethod()
 
         If mEditId <> "" Then
             uiTitle.Text = "Zmiana Geofence"
@@ -103,6 +113,7 @@ Public NotInheritable Class AddGeofence
     End Sub
 
     Private Function SprobujParseLon(sLon As String) As Double
+        DumpCurrMethod()
         Dim dTemp As Double
 
         If Not Double.TryParse(sLon, dTemp) Then Return 0
@@ -110,6 +121,7 @@ Public NotInheritable Class AddGeofence
 
     End Function
     Private Function SprobujParseLat(sLat As String) As Double
+        DumpCurrMethod()
         Dim dTemp As Double
 
         If Not Double.TryParse(sLat, dTemp) Then Return 0
@@ -117,6 +129,7 @@ Public NotInheritable Class AddGeofence
     End Function
 
     Private Function SprobujParseFi(sFi As String) As Double
+        DumpCurrMethod()
         Dim dTemp As Double
 
         If Not Double.TryParse(sFi, dTemp) Then Return 0
@@ -124,6 +137,7 @@ Public NotInheritable Class AddGeofence
     End Function
 
     Private Function SprobujParseZwloka(sFi As String) As Double
+        DumpCurrMethod()
         Dim dTemp As Double
 
         If Not Double.TryParse(sFi, dTemp) Then Return 0
@@ -131,11 +145,13 @@ Public NotInheritable Class AddGeofence
     End Function
 
     Private Sub SprobujParse(sLat As String, sLon As String)
+        DumpCurrMethod()
         uiLat.Text = SprobujParseLat(sLat)
         uiLon.Text = SprobujParseLon(sLon)
     End Sub
 
     Private Async Function SprobujZClip() As Task(Of Boolean)
+        DumpCurrMethod()
         Dim sTxt As String = Await ClipGetAsync()
         Dim iInd As Integer
 
@@ -171,32 +187,10 @@ Public NotInheritable Class AddGeofence
         Return False
     End Function
 
-    Public Async Function GetCurrentPoint(iTimeoutSecs As Integer) As Task(Of Windows.Devices.Geolocation.BasicGeoposition)
 
-        Dim rVal As Windows.Devices.Geolocation.GeolocationAccessStatus = Await Windows.Devices.Geolocation.Geolocator.RequestAccessAsync()
-        If rVal <> Windows.Devices.Geolocation.GeolocationAccessStatus.Allowed Then
-            Await DialogBoxAsync("resErrorNoGPSAllowed")
-            Return GetDomekGeopos(1)
-        End If
-
-        Dim oDevGPS As Windows.Devices.Geolocation.Geolocator = New Windows.Devices.Geolocation.Geolocator()
-
-        oDevGPS.DesiredAccuracyInMeters = GetSettingsInt("gpsPrec", 75) ' dla 4 km/h; 100 m = 90 sec, 75 m = 67 sec
-        Dim oCacheTime As TimeSpan = New TimeSpan(0, 1, 0)  ' minuta ≈ 80 m (ale nie autobusem! wtedy 400 m)
-        Dim oTimeout As TimeSpan = New TimeSpan(0, 0, iTimeoutSecs)
-
-        Try
-            Dim oPos As Windows.Devices.Geolocation.Geoposition = Await oDevGPS.GetGeopositionAsync(oCacheTime, oTimeout)
-            Return oPos.Coordinate.Point.Position
-        Catch ex As Exception   ' zapewne timeout
-        End Try
-
-        Await DialogBoxAsync("resErrorGettingPos")
-        Return GetDomekGeopos(1)
-
-    End Function
 
     Private Sub uiMapka_Loaded(sender As Object, e As RoutedEventArgs)
+        DumpCurrMethod()
 
         uiMapka.Center = New Windows.Devices.Geolocation.Geopoint(GetDomekGeopos(0))
 
@@ -230,12 +224,43 @@ Public NotInheritable Class AddGeofence
 
 
     Private Sub uiMapka_Holding(sender As Maps.MapControl, args As Maps.MapInputEventArgs)
+        DumpCurrMethod()
         uiLat.Text = args.Location.Position.Latitude
         uiLon.Text = args.Location.Position.Longitude
+        MapkaFocus(False)
     End Sub
 
     Private Sub uiMapka_DTapped(sender As Maps.MapControl, args As Maps.MapInputEventArgs)
+        DumpCurrMethod()
         uiLat.Text = args.Location.Position.Latitude
         uiLon.Text = args.Location.Position.Longitude
+        MapkaFocus(False)
+    End Sub
+
+    Private Sub MapkaFocus(bFocus As Boolean)
+        DumpCurrMethod()
+        For Each oItem As FrameworkElement In uiGridFields.Children
+            If Not oItem.Name.StartsWith("uiNazwa") Then
+                oItem.Visibility = If(bFocus, Visibility.Collapsed, Visibility.Visible)
+            End If
+        Next
+    End Sub
+
+
+    Private Sub uiMapka_FocusEngaged(sender As Control, args As FocusEngagedEventArgs) Handles uiMapka.FocusEngaged
+        DumpCurrMethod()
+        MapkaFocus(True)
+    End Sub
+
+    Private Sub uiMapka_Tapped(sender As Control, e As TappedRoutedEventArgs) Handles uiMapka.Tapped
+        DumpCurrMethod()
+        MapkaFocus(True)
+        ' TappedRoutedEventArgs
+        ' Maps.MapInputEventArgs
+    End Sub
+
+    Private Sub uiMapka_MapTapped(sender As Maps.MapControl, args As Maps.MapInputEventArgs) Handles uiMapka.MapTapped
+        DumpCurrMethod()
+        MapkaFocus(True)
     End Sub
 End Class

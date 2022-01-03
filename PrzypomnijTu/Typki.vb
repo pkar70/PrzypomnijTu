@@ -20,6 +20,8 @@ Public Class ListaMiejsc
     Public Const sIdPrefix As String = "PTU_"
 
     Public Async Function LoadAsync(Optional bForce As Boolean = False) As Task(Of Boolean)
+        DumpCurrMethod()
+
         If IsLoaded() AndAlso Not bForce Then Return True
 
         bModified = False
@@ -162,7 +164,7 @@ Public Class ListaMiejsc
     End Sub
 
     Private Sub ZaznaczKtoreSaMonitorowaneLokalnie()
-
+        DumpCurrMethod()
         For Each oItem As JednoMiejsce In mItems
             oItem.bTutaj = False
         Next
@@ -181,6 +183,7 @@ Public Class ListaMiejsc
                 For Each oItem As JednoMiejsce In mItems
                     If oItem.dLat = oGeoCircle.Center.Latitude AndAlso
                                 oItem.dLon = oGeoCircle.Center.Longitude Then
+                        DumpMessage("Circle " & oItem.sName & " is monitored lokalnie")
                         oItem.bTutaj = True
                         Exit For
                     End If
@@ -191,6 +194,7 @@ Public Class ListaMiejsc
     End Sub
 
     Public Function ImportFencesFromSystem() As Boolean
+        DumpCurrMethod()
 
         Dim bWas As Boolean = False
 
@@ -223,5 +227,96 @@ Public Class ListaMiejsc
         Return bWas
     End Function
 
+    Private Shared Function CreateGeofence(oMiejsce As JednoMiejsce) As Windows.Devices.Geolocation.Geofencing.Geofence
+        DumpCurrMethod()
+
+        Dim oPoint As Windows.Devices.Geolocation.BasicGeoposition = New Windows.Devices.Geolocation.BasicGeoposition
+        oPoint.Latitude = oMiejsce.dLat
+        oPoint.Longitude = oMiejsce.dLon
+
+        Dim oGeocircle As Windows.Devices.Geolocation.Geocircle
+        oGeocircle = New Windows.Devices.Geolocation.Geocircle(oPoint, 200) ' w metrach
+
+        Dim oGeofence As Windows.Devices.Geolocation.Geofencing.Geofence
+        ' When this constructor is used, the 
+        ' MonitoredStates will default To monitor For both the Entered And Exited states, 
+        ' SingleUse will default To False, 
+        ' the DwellTime will default To 10 seconds, the 
+        ' StartTime will default To 0 meaning start immediately, and the 
+        ' Duration will default to 0, meaning forever.
+
+        ' bardziej rozbudowany:
+        ' .., states, singleUse
+        ' bardziej rozbudowany:
+        ' ....., dwellTime (secs)
+
+        Dim oEventy As Windows.Devices.Geolocation.Geofencing.MonitoredGeofenceStates = Windows.Devices.Geolocation.Geofencing.MonitoredGeofenceStates.Entered
+#If DEBUG Then
+        oEventy = oEventy Or Windows.Devices.Geolocation.Geofencing.MonitoredGeofenceStates.Exited
+#End If
+
+        oGeofence = New Windows.Devices.Geolocation.Geofencing.Geofence(ListaMiejsc.sIdPrefix & oMiejsce.sName, oGeocircle, oEventy, False, TimeSpan.FromSeconds(oMiejsce.iZwloka))
+
+        Return oGeofence
+
+        ' bardziej rozbudowany:
+        ' ....., startTime, duration
+
+    End Function
+
+    Private Shared Function TryAddSystemGeofence(oItem As JednoMiejsce) As Boolean
+        DumpCurrMethod()
+
+        Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
+            Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
+
+        If oGeoMon.Geofences IsNot Nothing Then
+            For Each oFence As Windows.Devices.Geolocation.Geofencing.Geofence In oGeoMon.Geofences
+                'dwa zabezpieczenia, którego mogłoby nie być, ale na wszelki wypadek... (nazwa, i kształt)
+                If Not oFence.Id.ToUpper.StartsWith(ListaMiejsc.sIdPrefix) Then Continue For
+                Dim oGeoCircle As Windows.Devices.Geolocation.Geocircle = TryCast(oFence.Geoshape, Windows.Devices.Geolocation.Geocircle)
+                If oGeoCircle Is Nothing Then Continue For
+
+                ' juz mamy takie
+                If oGeoCircle.Center.DistanceTo(oItem.dLat, oItem.dLon) < 20 Then Return False
+            Next
+        End If
+
+        Dim oNew As Windows.Devices.Geolocation.Geofencing.Geofence = CreateGeofence(oItem)
+        oGeoMon.Geofences.Add(oNew)
+        Return True
+    End Function
+
+    Public Sub DodajUsunSystem(bUsun As Boolean, oItem As JednoMiejsce)
+        DumpCurrMethod()
+        If oItem Is Nothing Then Return
+
+        ' Zakladam SYNC App.gMiejsca oraz GeofenceMonitor (bo przy wczytywaniu sie to zrobilo)
+
+        Dim oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor =
+            Windows.Devices.Geolocation.Geofencing.GeofenceMonitor.Current
+
+        If oGeoMon.Geofences Is Nothing Then Return
+
+        If Not bUsun Then
+            ' włącz monitorowanie
+            TryAddSystemGeofence(oItem)   ' z testem czy juz istnieje - bo MainPage.Loaded robi OnChecked!
+        Else
+            ' wyłącz
+            For Each oFence As Windows.Devices.Geolocation.Geofencing.Geofence In oGeoMon.Geofences
+                'dwa zabezpieczenia, którego mogłoby nie być, ale na wszelki wypadek... (nazwa, i kształt)
+                If Not oFence.Id.ToUpper.StartsWith(ListaMiejsc.sIdPrefix) Then Continue For
+                Dim oGeoCircle As Windows.Devices.Geolocation.Geocircle = TryCast(oFence.Geoshape, Windows.Devices.Geolocation.Geocircle)
+                If oGeoCircle Is Nothing Then Continue For
+
+                If oItem.dLat = oGeoCircle.Center.Latitude AndAlso
+                                oItem.dLon = oGeoCircle.Center.Longitude Then
+                    oGeoMon.Geofences.Remove(oFence)
+                    Exit For
+                End If
+            Next
+        End If
+
+    End Sub
 End Class
 
