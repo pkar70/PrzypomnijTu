@@ -60,4 +60,18 @@
             <SymbolIcon Name="uiSaveSymbol" Symbol="Add" />
         </Button>
     </Grid>
+    <Page.BottomAppBar>
+        <CommandBar ClosedDisplayMode="Minimal" >
+            <AppBarButton Icon="Flag" Label="POI" >
+                <AppBarButton.Flyout>
+                    <MenuFlyout x:Name="uiPOIlist">
+                        <MenuFlyoutItem Text="Find" Click="uiFind_Click" />
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton> 
+            <AppBarSeparator/>
+            <AppBarButton Icon="Save" Label="Save" Click="uiAdd_Click" />
+        </CommandBar>
+    </Page.BottomAppBar>
+
 </Page>

@@ -136,8 +136,13 @@
     <Compile Include="App.xaml.vb">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dbase_Azure.vb" />
+    <Compile Include="Dbase_base.vb" />
     <Compile Include="DebugRozne.xaml.vb">
       <DependentUpon>DebugRozne.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="FindPOI.xaml.vb">
+      <DependentUpon>FindPOI.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.vb">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -177,6 +182,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DebugRozne.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FindPOI.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

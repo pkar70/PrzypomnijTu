@@ -22,12 +22,15 @@ Public NotInheritable Class Settingsy
     Private Sub uiSave_Click(sender As Object, e As RoutedEventArgs)
         SetSettingsInt("silenceTo", uiDayStart.Value)
         SetSettingsInt("silenceFrom", uiDayStop.Value)
+        SetSettingsBool(uiEmailSMS, "useSMS")
         Me.Frame.GoBack()
     End Sub
 
     Private Sub Page_Loaded(sender As Object, e As RoutedEventArgs)
         uiDayStart.Value = GetSettingsInt("silenceTo", 8)
         uiDayStop.Value = GetSettingsInt("silenceFrom", 21)
+        GetSettingsBool(uiEmailSMS, "useSMS", IsFamilyMobile)
+
 #If DEBUG Then
         uiDebug.Visibility = Visibility.Visible
 #End If

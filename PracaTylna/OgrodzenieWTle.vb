@@ -50,23 +50,26 @@ Public NotInheritable Class OgrodzenieWTle
         If oLista Is Nothing Then
             CrashMessageAdd("Geo..Read", "oList NULL")
             MakeToast("oGeoMon NULL", "a")
-        Else
-            If oLista.Count < 1 Then
-                CrashMessageAdd("Geo..Read", "oList <1")
-                MakeToast("oGeoMon NULL", "a")
-            Else
-                For Each oItem As Windows.Devices.Geolocation.Geofencing.GeofenceStateChangeReport In oLista
-                    Dim iInd As Integer = oItem.Geofence.Id.IndexOf("_")
-                    Dim sName As String = oItem.Geofence.Id.Substring(iInd + 1)
-                    Dim sMsg As String = sName
-                    If oItem.NewState = Windows.Devices.Geolocation.Geofencing.GeofenceState.Entered Then
-                        Name2Message(sName)
-                        If String.IsNullOrEmpty(sMsg) Then sMsg = sName
-                    End If
-                    MakeToast(sMsg, oItem.NewState.ToString)
-                Next
-            End If
+            Return
         End If
+
+        If oLista.Count < 1 Then
+            CrashMessageAdd("Geo..Read", "oList <1")
+            MakeToast("oGeoMon NULL", "a")
+            Return
+        End If
+
+        For Each oItem As Windows.Devices.Geolocation.Geofencing.GeofenceStateChangeReport In oLista
+            Dim iInd As Integer = oItem.Geofence.Id.IndexOf("_")
+            Dim sName As String = oItem.Geofence.Id.Substring(iInd + 1)
+            Dim sMsg As String = sName
+            If oItem.NewState = Windows.Devices.Geolocation.Geofencing.GeofenceState.Entered Then
+                sMsg = Name2Message(sName)
+                If String.IsNullOrEmpty(sMsg) Then sMsg = sName
+            End If
+            MakeToast(sMsg, oItem.NewState.ToString)
+        Next
+
     End Sub
 
     Private Function Name2Message(sName As String) As String
@@ -87,20 +90,25 @@ Public NotInheritable Class OgrodzenieWTle
             ToastAction("foreground", "OPEN", sFenceId, "resOpen") & vbCrLf &
             "</actions>"
 
-        Dim oXml = New Windows.Data.Xml.Dom.XmlDocument
-        oXml.LoadXml("<toast>" & sVisual & sAction & "</toast>")
+        Dim sGlobalAction As String = " launch=""OPEN" & XmlSafeString(sFenceId) & """ "
 
+        Dim oXml = New Windows.Data.Xml.Dom.XmlDocument
+        oXml.LoadXml("<toast" & sGlobalAction & ">" & sVisual & sAction & "</toast>")
 
         Dim oToast = New Windows.UI.Notifications.ToastNotification(oXml)
 
         Windows.UI.Notifications.ToastNotificationManager.CreateToastNotifier().Show(oToast)
     End Sub
     Public Shared Function XmlSafeString(sInput As String) As String
-        Dim sTmp As String
-        sTmp = sInput.Replace("&", "&amp;")
-        sTmp = sTmp.Replace("<", "&lt;")
-        sTmp = sTmp.Replace(">", "&gt;")
-        Return sTmp
+        ' 2022.01.08 zmiana na niby bardziej elastyczny?
+        'Dim sTmp As String
+        'sTmp = sInput.Replace("&", "&amp;")
+        'sTmp = sTmp.Replace("<", "&lt;")
+        'sTmp = sTmp.Replace(">", "&gt;")
+        'Return sTmp
+        sInput = New XText(sInput).ToString()
+        sInput = sInput.Replace("""", "&quote;")
+        Return sInput
     End Function
     Public Shared Function ToastAction(sAType As String, sAct As String, sGuid As String, sContent As String) As String
         Dim sTmp As String = sContent

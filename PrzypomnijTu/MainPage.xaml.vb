@@ -1,12 +1,13 @@
 ﻿
+' moje pomysły:
+' * wysłanie miejsca (a nie zadania)? "zsynchronizujmy sobie miejsca"
+
 ' posiedzenie Wojtek+Magda+ja
 ' * termin ważności przypomnienia, i larum że nie odklikane/potwierdzone
-' * szukanie wedle POI w OSM? Bing? Gmaps?
 ' * edycja POI w OSM?
 ' * punkt z mapy - to Biedronka, jest wiele innych, dowolna niekoniecznie ta
 ' * link z miejsca dokądś (np. z POI do ich strony)
 ' * auto wyłączanie punktów odległych ≥ ode mnie
-' * wyszukiwanie na mapie (np. Warszawa)
 ' * potwierdzenie wykonania - uwaga! jak wysłane do kilku osób
 ' * do zrobienia nie jedna rzezc, a lista (np. zakupów), kilka osób dostało, każdy kupi inny kawałek
 ' * - a na razie blokada wysłania do więcej niż jednego?
@@ -16,7 +17,7 @@
 ' * MAUI status sms (jest iOS, Android, UWP), geofence (nie ma), i mapy
 ' * czas od pierwszej instalacji?
 ' * import/export danych (miejsc) z opisami, zwłaszcza jak większymi listami (np. co do zwiedzenia w Rzymie)
-' * limit geofences dla Windows, Android, iOS
+' * limit geofences dla Windows (no limit, ale spada wydajność), Android (100), iOS (20)
 
 ' scenariusz: jak tu będę, to warto zrobić zdjęcie, z tego samego miejsca w 4 pory roku
 ' scenariusz: kupić w OBI jak tam będę (lista)
@@ -27,6 +28,15 @@
 ' link do app UWP Shopping List?
 
 ' może MAPSUI, ale 1.4.8, bo nowsze nie pójdą na telefon
+
+' 2022.01.10
+' * wysyłanie via SMS (default dla Mobile), albo via Email. Przełączalne w Settings (czyli można z desktop)
+' * SearchPOI, a tak naprawdę nominatim.osm, max. 10 punktów z nazwą - ale to wymagało włączenia Internet dla tego!
+
+' 2022.01.08
+' * BUG nie było default action w Toast, więc nie było OPENid (param=empty).
+'       * w OgrodzenieWTle zmieniłem w MakeToast (do XML default action)
+'       * w MainPage dodałem kontrolę uruchomienia
 
 ' 2022.01.03
 ' * max mapy jak jest aktywna, z wygaszaniem niepotrzebnych pól (zostaje tylko Name)
@@ -214,12 +224,19 @@ Public NotInheritable Class MainPage
 
         If Not String.IsNullOrEmpty(msNavigatedParam) Then
             If msNavigatedParam.StartsWith("OPEN") Then
+                If msNavigatedParam.Length < 5 Then
+                    Await DialogBoxAsync("FAIL: call from Toast without Fence ID")
+                    Return
+                End If
+                Dim sFenceId As String = msNavigatedParam.Substring(4)
+                Await DialogBoxAsync("niby z Toast, = " & msNavigatedParam)
                 ShowPlaceMessage(App.gMiejsca.GetMiejsce(msNavigatedParam.Substring(4)))
             ElseIf msNavigatedParam.ToLower.StartsWith("przyptu") Then
                 Await ProtocolActivatedEventArgs(msNavigatedParam)
             End If
         End If
 
+        msNavigatedParam = ""   ' ponowne Page_Load nie bedzie się powtarzać (tym komunikatem)
     End Sub
 
     Private Async Function ShowZdarzenia() As Task
@@ -289,6 +306,8 @@ Public NotInheritable Class MainPage
             DialogBox("nie moge znalezc miejsca do którego trafiłeś")
             Return
         End If
+
+        Await DialogBoxAsync("msg dla miejsca")
 
         If oItem.sRemindText Is Nothing Then oItem.sRemindText = ""
 
@@ -411,13 +430,22 @@ Public NotInheritable Class MainPage
         If oItem Is Nothing Then Return
 
 
-        Dim sTxt As String = "Zadzwon jak bedziesz tu przyptu://?s=" & oItem.dLat.ToString("#0.0000") & "&d=" & oItem.dLon.ToString("#0.0000") & "&r=" & oItem.dRadius.ToString("###0.0000")
-        Dim oSMS As New Windows.ApplicationModel.Chat.ChatMessage
+        Dim sTxt As String = "Zadzwon jak bedziesz tu przyptu://?s=" & oItem.dLat.ToString("#0.0000") & "&d=" & oItem.dLon.ToString("#0.0000") & "&r=" & oItem.dRadius.ToString("###0")
 
-        oSMS.Body = sTxt
+        If GetSettingsBool("useSMS", IsFamilyMobile) Then
+            Dim oSMS As New Windows.ApplicationModel.Chat.ChatMessage
 
-        ' Windows.ApplicationModel.Chat.ChatMessageManager.ShowSmsSettings()
-        Await Windows.ApplicationModel.Chat.ChatMessageManager.ShowComposeSmsMessageAsync(oSMS)
+            oSMS.Body = sTxt
+
+            ' Windows.ApplicationModel.Chat.ChatMessageManager.ShowSmsSettings()
+            Await Windows.ApplicationModel.Chat.ChatMessageManager.ShowComposeSmsMessageAsync(oSMS)
+        Else
+            Dim oMsg As Email.EmailMessage = New Windows.ApplicationModel.Email.EmailMessage()
+            oMsg.Subject = "Proszę zadzwoń"
+            oMsg.Body = sTxt
+            Await Email.EmailManager.ShowComposeNewEmailAsync(oMsg)
+        End If
+
     End Sub
 
     Private Async Function ProtocolActivatedEventArgs(msNavigatedParam As String) As Task
