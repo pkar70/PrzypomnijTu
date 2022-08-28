@@ -82,7 +82,7 @@ Public NotInheritable Class DebugRozne
         If Not Await DialogBoxYNAsync("DEL list in app?") Then Return
         App.gMiejsca.Clear()
 
-        If Await DialogBoxYNAsync("save empty list?") Then Await App.gMiejsca.SaveAsync(True)
+        If Await DialogBoxYNAsync("save empty list?") Then App.gMiejsca.Save(True)
     End Sub
 
     Private Sub Page_Loaded(sender As Object, e As RoutedEventArgs)

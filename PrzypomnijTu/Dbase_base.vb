@@ -10,6 +10,8 @@ Public MustInherit Class Dbase_base
     ''' </summary>
     Public MustOverride Async Function Init() As Task(Of String)
 
+    Public MustOverride Async Function CheckConnectionAvailable() As Task(Of Boolean)
+
     ''' <summary>
     ''' cos jak new GUID, ale sprawdza w bazie czy aby na pewno nie ma takiego
     ''' </summary>

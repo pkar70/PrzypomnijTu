@@ -1,8 +1,4 @@
-﻿' The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
-
-''' <summary>
-''' An empty page that can be used on its own or navigated to within a Frame.
-''' </summary>
+﻿
 Public NotInheritable Class Settingsy
     Inherits Page
     Private Async Sub uiClear_Click(sender As Object, e As RoutedEventArgs)
@@ -15,7 +11,7 @@ Public NotInheritable Class Settingsy
         oGeoMon.Geofences.Clear()
 
         App.gMiejsca.Clear()
-        Await App.gMiejsca.SaveAsync(True)
+        App.gMiejsca.Save(True)
 
     End Sub
 
@@ -23,6 +19,7 @@ Public NotInheritable Class Settingsy
         SetSettingsInt("silenceTo", uiDayStart.Value)
         SetSettingsInt("silenceFrom", uiDayStop.Value)
         SetSettingsBool(uiEmailSMS, "useSMS")
+        SetSettingsString(uiUserName, "userName")
         Me.Frame.GoBack()
     End Sub
 
@@ -30,6 +27,7 @@ Public NotInheritable Class Settingsy
         uiDayStart.Value = GetSettingsInt("silenceTo", 8)
         uiDayStop.Value = GetSettingsInt("silenceFrom", 21)
         GetSettingsBool(uiEmailSMS, "useSMS", IsFamilyMobile)
+        GetSettingsString(uiUserName, "userName")
 
 #If DEBUG Then
         uiDebug.Visibility = Visibility.Visible

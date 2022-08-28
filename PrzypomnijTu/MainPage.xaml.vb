@@ -18,6 +18,9 @@
 ' * czas od pierwszej instalacji?
 ' * import/export danych (miejsc) z opisami, zwłaszcza jak większymi listami (np. co do zwiedzenia w Rzymie)
 ' * limit geofences dla Windows (no limit, ale spada wydajność), Android (100), iOS (20)
+' * settings:defaultUserName, na żądanie wypełnienie numerem telefonu (gdy są permission)?
+' * z przyptu://id= oznacza przejście przez bazę
+' * gdy z przyptu://d=s=..., to możliwość zmiany tekstu (można sobie wpisać do kogo)
 
 ' scenariusz: jak tu będę, to warto zrobić zdjęcie, z tego samego miejsca w 4 pory roku
 ' scenariusz: kupić w OBI jak tam będę (lista)
@@ -28,6 +31,12 @@
 ' link do app UWP Shopping List?
 
 ' może MAPSUI, ale 1.4.8, bo nowsze nie pójdą na telefon
+
+' 2022.01.11
+' * próba zrobienia cosmosdb (przeniesienie z GitHub.C# tutaj do VB) - za dużo jednak roboty, by tak robić do testów tylko
+'           - przecież Azure trzeba byłoby kupić; a poza tym wersja VB jest tylko na Windows, i to telefon - bo desktop będzie miał nowsze MinTarget
+' * a więc robię bazę w oparciu o mój publiczny IP, WWW/ASP i mój SQL (dbase_pkSQLasp)
+' * settings:defaultUserName, jako informacja o wysyłaczu, to można wypełniać nawet na żądanie numerem telefonu (jak będą permissiony do tego?)
 
 ' 2022.01.10
 ' * wysyłanie via SMS (default dla Mobile), albo via Email. Przełączalne w Settings (czyli można z desktop)
@@ -85,10 +94,10 @@ Public NotInheritable Class MainPage
 
             mLadowanie = True
 
-            Await App.gMiejsca.LoadAsync    ' zawsze wczytuje, nawet jak juz jest - bo moze Roaming jest nowszy
+            App.gMiejsca.Load()    ' zawsze wczytuje, nawet jak juz jest - bo moze Roaming jest nowszy
             If App.gMiejsca.ImportFencesFromSystem() Then    ' pewnie tylko raz to się wykorzysta, u mnie i teraz :)
                 Await DialogBoxAsync("Wczytałem coś z systemu, co nie było w pliku")
-                Await App.gMiejsca.SaveAsync(True)
+                App.gMiejsca.Save(True)
             End If
 
             uiPointsList.ItemsSource = App.gMiejsca.GetList
@@ -210,7 +219,7 @@ Public NotInheritable Class MainPage
         Await CrashMessageShowAsync()
 
         ProgRingInit(True, False)
-        GetAppVers(Nothing)
+        Me.ShowAppVers()
 
         If Not Await SprawdzPermissionyGeo() Then Return
         If Not Await SprawdzPermissionyBack() Then
@@ -273,7 +282,7 @@ Public NotInheritable Class MainPage
 
     End Function
 
-    Private Async Sub uiHere_Checked(sender As Object, e As RoutedEventArgs)
+    Private Sub uiHere_Checked(sender As Object, e As RoutedEventArgs)
         DumpCurrMethod()
         If mLadowanie Then Return   ' jest wlasnie robione ItemsSource , więc to do zignorowania
         Dim oCB As CheckBox = TryCast(sender, CheckBox)
@@ -286,7 +295,7 @@ Public NotInheritable Class MainPage
 
         ' zmiana w App.gMiejsca jest zrobiona przez XAML
         App.gMiejsca.MakeDirty()
-        Await App.gMiejsca.SaveAsync(True)
+        App.gMiejsca.Save(True)
 
     End Sub
 
@@ -332,7 +341,7 @@ Public NotInheritable Class MainPage
         If oItem.sRemindText = oInputTextBox.Text Then Return
 
         oItem.sRemindText = oInputTextBox.Text
-        Await App.gMiejsca.SaveAsync(True)
+        App.gMiejsca.Save(True)
 
     End Sub
 
@@ -367,7 +376,7 @@ Public NotInheritable Class MainPage
         oItem.dRadius = dRadius
         If oItem.bTutaj Then App.gMiejsca.DodajUsunSystem(False, oItem)
 
-        Await App.gMiejsca.SaveAsync(True)
+        App.gMiejsca.Save(True)
 
     End Sub
 
@@ -400,7 +409,7 @@ Public NotInheritable Class MainPage
         oItem.sName = sNewName
         If oItem.bTutaj Then App.gMiejsca.DodajUsunSystem(False, oItem)
 
-        Await App.gMiejsca.SaveAsync(True)
+        App.gMiejsca.Save(True)
 
     End Sub
 
@@ -486,7 +495,7 @@ Public NotInheritable Class MainPage
                 oNew.iZwloka = 30
                 App.gMiejsca.Add(oNew)
                 App.gMiejsca.DodajUsunSystem(False, oNew)
-                Await App.gMiejsca.SaveAsync(True)
+                App.gMiejsca.Save(True)
             End If
         End If
 

@@ -22,7 +22,7 @@ Partial Public NotInheritable Class AddGeofence
         ' uiMapka.Center = New Windows.Devices.Geolocation.Geopoint(oPos)
     End Sub
 
-    Private Async Sub uiAdd_Click(sender As Object, e As RoutedEventArgs)
+    Private Sub uiAdd_Click(sender As Object, e As RoutedEventArgs)
         DumpCurrMethod()
 
         ' testy nazwy
@@ -35,10 +35,7 @@ Partial Public NotInheritable Class AddGeofence
             Return
         End If
 
-        If uiNazwa.Text = gInitKey Then
-            InitMojeMiejsca()
-        Else
-
+        If Not TryInitMojeMiejsca(uiNazwa.Text) Then
             Dim oPrev As JednoMiejsce = App.gMiejsca.GetMiejsce(uiNazwa.Text)
             If oPrev IsNot Nothing Then
                 If mEditId = "" Then
@@ -76,7 +73,7 @@ Partial Public NotInheritable Class AddGeofence
             End If
         End If
 
-        Await App.gMiejsca.SaveAsync(True)
+        App.gMiejsca.Save(True)
         Me.Frame.GoBack()
     End Sub
 

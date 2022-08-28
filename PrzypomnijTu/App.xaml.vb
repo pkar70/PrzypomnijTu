@@ -102,11 +102,12 @@
                 Dim sArgs As String = oToastAct.Argument
                 Select Case sArgs.Substring(0, 4)
                     Case "OPEN"
-                        If rootFrame.Content Is Nothing Then
-                            rootFrame.Navigate(GetType(MainPage), sArgs)
-                        Else
-                            CrashMessageAdd("OnActivated - OPEN not null", "")
-                        End If
+                        ' było skomplikowane, ale przecież zawsze ma pójść do MainPage, prawda?
+                        'If rootFrame.Content Is Nothing Then
+                        rootFrame.Navigate(GetType(MainPage), sArgs)
+                        'Else
+                        '    CrashMessageAdd("OnActivated - OPEN not null", "")
+                        'End If
                 End Select
             End If
             rootFrame.Navigate(GetType(MainPage))
@@ -122,7 +123,7 @@
     End Sub
 
 
-    Public Shared gMiejsca As ListaMiejsc = New ListaMiejsc
+    Public Shared gMiejsca As ListaMiejsc = New ListaMiejsc(Windows.Storage.ApplicationData.Current.RoamingFolder.Path)
 
     Shared Sub GeofenceEvents2Toasts(oGeoMon As Windows.Devices.Geolocation.Geofencing.GeofenceMonitor)
 

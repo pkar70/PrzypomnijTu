@@ -3,7 +3,7 @@
     Public Property sRemindText As String = ""
     Public Property dLat As Double
     Public Property dLon As Double
-    Public Property dRadius As Double
+    Public Property dRadius As Double = 75
     Public Property iZwloka As Integer = 10 ' UWP default gdy nie ma w ctor
 
     '    Public Property sLastVisitTime As String
@@ -16,17 +16,27 @@ End Class
 Public Class ListaMiejsc
     Private mItems As ObservableCollection(Of JednoMiejsce) = Nothing
     Private bModified As Boolean = False
-    Private Const sFileName As String = "miejsca.json"
+    Private Const FILE_NAME As String = "miejsca.json"
+    Private msFileName As String = ""
     Public Const sIdPrefix As String = "PTU_"
 
-    Public Async Function LoadAsync(Optional bForce As Boolean = False) As Task(Of Boolean)
+    Public Sub New(sFolderPath As String)
+        msFileName = IO.Path.Combine(sFolderPath, FILE_NAME)
+    End Sub
+
+    Public Function Load(Optional bForce As Boolean = False) As Boolean
         DumpCurrMethod()
 
         If IsLoaded() AndAlso Not bForce Then Return True
 
         bModified = False
 
-        Dim sTxt As String = Await Windows.Storage.ApplicationData.Current.RoamingFolder.ReadAllTextFromFileAsync(sFileName)
+        If Not IO.File.Exists(msFileName) Then
+            mItems = New ObservableCollection(Of JednoMiejsce)
+            Return False
+        End If
+
+        Dim sTxt As String = IO.File.ReadAllText(msFileName)
         If sTxt Is Nothing OrElse sTxt.Length < 5 Then
             mItems = New ObservableCollection(Of JednoMiejsce)
             Return False
@@ -40,17 +50,14 @@ Public Class ListaMiejsc
 
     End Function
 
-    Public Async Function SaveAsync(bForce As Boolean) As Task(Of Boolean)
+    Public Function Save(bForce As Boolean) As Boolean
         If Not bModified AndAlso Not bForce Then Return False
         If mItems.Count < 1 Then Return False
 
-        Dim oFold As Windows.Storage.StorageFolder = Windows.Storage.ApplicationData.Current.RoamingFolder
         Dim sTxt As String = Newtonsoft.Json.JsonConvert.SerializeObject(mItems, Newtonsoft.Json.Formatting.Indented)
-
-        Await oFold.WriteAllTextToFileAsync(sFileName, sTxt, Windows.Storage.CreationCollisionOption.ReplaceExisting)
+        IO.File.WriteAllText(msFileName, sTxt)
 
         bModified = False
-
         Return True
 
     End Function
